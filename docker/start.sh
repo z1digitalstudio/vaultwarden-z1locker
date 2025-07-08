@@ -20,10 +20,13 @@ region = ${VAULTWARDEN_DATA_REGION:-us-east-1}
 acl = private
 EOF
 
+# Use /tmp/data instead of /data
+mkdir -p /tmp/data
+
 # === Restore data from S3 ===
-echo "⏬ Syncing from $RCLONE_REMOTE:$RCLONE_BUCKET -> /data ..."
-if ! rclone sync "$RCLONE_REMOTE:$RCLONE_BUCKET" /data --config "$RCLONE_CONFIG_PATH"; then
-    echo "⚠️ Restore failed — starting with empty /data"
+echo "⏬ Syncing from $RCLONE_REMOTE:$RCLONE_BUCKET -> /tmp/data ..."
+if ! rclone sync "$RCLONE_REMOTE:$RCLONE_BUCKET" /tmp/data --config "$RCLONE_CONFIG_PATH"; then
+    echo "⚠️ Restore failed — starting with empty /tmp/data"
 fi
 
 # === Optional umask ===
@@ -38,6 +41,7 @@ fi
 
 # === Start Vaultwarden ===
 echo "🚀 Starting Vaultwarden..."
+export DATA_FOLDER="/tmp/data"
 /vaultwarden "$@" &
 VW_PID=$!
 
