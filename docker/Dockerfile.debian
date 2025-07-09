@@ -121,7 +121,7 @@ COPY ./macros ./macros
 ARG CARGO_PROFILE=release
 
 # Configure the DB ARG as late as possible to not invalidate the cached layers above
-ARG DB=sqlite,mysql,postgresql,s3
+ARG DB=sqlite,mysql,postgresql
 
 # Builds your dependencies and removes the
 # dummy project, except the target folder
@@ -167,13 +167,6 @@ RUN source /env-cargo && \
 #
 # We need to add `--platform` here, because of a podman bug: https://github.com/containers/buildah/issues/4742
 FROM --platform=$TARGETPLATFORM docker.io/library/debian:bookworm-slim
-
-# Install curl and rclone
-RUN apt-get update && apt-get install -y curl && \
-    curl -O https://downloads.rclone.org/rclone-current-linux-amd64.deb && \
-    apt install -y ./rclone-current-linux-amd64.deb && \
-    rm rclone-current-linux-amd64.deb && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV ROCKET_PROFILE="release" \
     ROCKET_ADDRESS=0.0.0.0 \
