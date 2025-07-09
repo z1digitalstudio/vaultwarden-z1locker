@@ -1261,10 +1261,8 @@ fn opendal_s3_operator_for_path(path: &str) -> Result<opendal::Operator, Error> 
         builder = builder.customized_credential_load(Box::new(OPEN_DAL_S3_CREDENTIAL_LOADER));
     }
 
-    // For custom endpoints, disable virtual host style and use path style
-    if custom_endpoint.is_some() {
-        builder = builder.disable_virtual_host_style();
-    } else {
+    // For custom endpoints, use path style (default). For AWS S3, use virtual host style
+    if custom_endpoint.is_none() {
         builder = builder.enable_virtual_host_style();
     }
 
