@@ -1244,18 +1244,18 @@ fn opendal_s3_operator_for_path(path: &str) -> Result<opendal::Operator, Error> 
     let mut builder = opendal::services::S3::default();
 
     // Configure custom endpoint if provided
-    if let Some(endpoint) = custom_endpoint {
-        builder = builder.endpoint(&endpoint);
+    if let Some(ref endpoint) = custom_endpoint {
+        builder = builder.endpoint(endpoint);
     }
 
     // Configure custom region if provided
-    if let Some(region) = custom_region {
-        builder = builder.region(&region);
+    if let Some(ref region) = custom_region {
+        builder = builder.region(region);
     }
 
     // Configure custom credentials if provided
-    if let (Some(access_key), Some(secret_key)) = (custom_access_key, custom_secret_key) {
-        builder = builder.access_key_id(&access_key).secret_access_key(&secret_key);
+    if let (Some(ref access_key), Some(ref secret_key)) = (custom_access_key, custom_secret_key) {
+        builder = builder.access_key_id(access_key).secret_access_key(secret_key);
     } else {
         // Use AWS credential chain for AWS S3
         builder = builder.customized_credential_load(Box::new(OPEN_DAL_S3_CREDENTIAL_LOADER));
