@@ -1243,6 +1243,9 @@ fn opendal_s3_operator_for_path(path: &str) -> Result<opendal::Operator, Error> 
 
     let mut builder = opendal::services::S3::default();
 
+    // Check if we have custom credentials
+    let has_custom_credentials = custom_access_key.is_some() && custom_secret_key.is_some();
+    
     // Configure custom endpoint if provided
     if let Some(ref endpoint) = custom_endpoint {
         builder = builder.endpoint(endpoint);
@@ -1253,9 +1256,11 @@ fn opendal_s3_operator_for_path(path: &str) -> Result<opendal::Operator, Error> 
         builder = builder.region(region);
     }
 
-    // Configure custom credentials if provided
-    if let (Some(ref access_key), Some(ref secret_key)) = (custom_access_key, custom_secret_key) {
-        builder = builder.access_key_id(access_key).secret_access_key(secret_key);
+    // Configure credentials
+    if has_custom_credentials {
+        if let (Some(ref access_key), Some(ref secret_key)) = (custom_access_key, custom_secret_key) {
+            builder = builder.access_key_id(access_key).secret_access_key(secret_key);
+        }
     } else {
         // Use AWS credential chain for AWS S3
         builder = builder.customized_credential_load(Box::new(OPEN_DAL_S3_CREDENTIAL_LOADER));
