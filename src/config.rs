@@ -1235,9 +1235,40 @@ fn opendal_s3_operator_for_path(path: &str) -> Result<opendal::Operator, Error> 
 
     let bucket = url.host_str().ok_or_else(|| format!("Missing Bucket name in data folder S3 URL {path:?}"))?;
 
-    let builder = opendal::services::S3::default()
-        .customized_credential_load(Box::new(OPEN_DAL_S3_CREDENTIAL_LOADER))
-        .enable_virtual_host_style()
+    // Check for custom S3 endpoint configuration
+    let custom_endpoint = std::env::var("S3_ENDPOINT").ok();
+    let custom_region = std::env::var("S3_REGION").ok();
+    let custom_access_key = std::env::var("S3_ACCESS_KEY").ok();
+    let custom_secret_key = std::env::var("S3_SECRET_KEY").ok();
+
+    let mut builder = opendal::services::S3::default();
+
+    // Configure custom endpoint if provided
+    if let Some(endpoint) = custom_endpoint {
+        builder = builder.endpoint(&endpoint);
+    }
+
+    // Configure custom region if provided
+    if let Some(region) = custom_region {
+        builder = builder.region(&region);
+    }
+
+    // Configure custom credentials if provided
+    if let (Some(access_key), Some(secret_key)) = (custom_access_key, custom_secret_key) {
+        builder = builder.access_key_id(&access_key).secret_access_key(&secret_key);
+    } else {
+        // Use AWS credential chain for AWS S3
+        builder = builder.customized_credential_load(Box::new(OPEN_DAL_S3_CREDENTIAL_LOADER));
+    }
+
+    // For custom endpoints, disable virtual host style and use path style
+    if custom_endpoint.is_some() {
+        builder = builder.disable_virtual_host_style();
+    } else {
+        builder = builder.enable_virtual_host_style();
+    }
+
+    let builder = builder
         .bucket(bucket)
         .root(url.path())
         .default_storage_class("INTELLIGENT_TIERING");
